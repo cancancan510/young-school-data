@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>江苏13市共青团青年夜校推文数据平台</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"WenQuanYi Micro Hei","Microsoft YaHei",sans-serif; background:#f0f2f5; color:#222; line-height:1.6; }
+  a { color:#1a73e8; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .header { background:linear-gradient(135deg,#0d47a1,#1565c0,#1976d2); color:#fff; padding:32px 20px 28px; text-align:center; }
+  .header h1 { font-size:26px; margin-bottom:8px; letter-spacing:1px; }
+  .header p { font-size:14px; opacity:.9; }
+  .stats-bar { display:flex; flex-wrap:wrap; justify-content:center; gap:14px; padding:18px 20px; background:#e8eaf6; }
+  .stat-card { background:#fff; border-radius:10px; padding:14px 20px; text-align:center; min-width:140px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .stat-card .num { font-size:28px; font-weight:700; color:#0d47a1; }
+  .stat-card .label { font-size:12px; color:#555; margin-top:2px; }
+  .container { max-width:1400px; margin:0 auto; padding:20px; }
+  .section { background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:20px; box-shadow:0 1px 6px rgba(0,0,0,.06); }
+  .section h2 { font-size:18px; color:#0d47a1; border-left:4px solid #1976d2; padding-left:10px; margin-bottom:14px; }
+  .section h3 { font-size:15px; color:#333; margin:14px 0 8px; }
+  .filters { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  .filters label { font-size:13px; color:#555; }
+  .filters select, .filters input { padding:6px 10px; border:1px solid #ccc; border-radius:6px; font-size:13px; }
+  .filters button { padding:6px 14px; border:none; border-radius:6px; background:#1976d2; color:#fff; cursor:pointer; font-size:13px; }
+  .filters button:hover { background:#0d47a1; }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th { background:#e3f2fd; color:#0d47a1; padding:8px 10px; text-align:left; border-bottom:2px solid #bbdefb; position:sticky; top:0; }
+  td { padding:7px 10px; border-bottom:1px solid #eee; vertical-align:top; }
+  tr:hover td { background:#f5f9ff; }
+  .tag { display:inline-block; padding:1px 7px; border-radius:10px; font-size:11px; margin:1px 2px 1px 0; }
+  .tag-yes { background:#e8f5e9; color:#2e7d32; }
+  .tag-no { background:#ffebee; color:#c62828; }
+  .tag-free { background:#e3f2fd; color:#1565c0; }
+  .tag-low { background:#fff3e0; color:#e65100; }
+  .pagination { text-align:center; margin-top:12px; }
+  .pagination button { padding:5px 12px; margin:0 3px; border:1px solid #ccc; background:#fff; border-radius:5px; cursor:pointer; }
+  .pagination button.active { background:#1976d2; color:#fff; border-color:#1976d2; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .city-card { background:#fafbff; border:1px solid #e0e4f0; border-radius:10px; padding:14px 16px; }
+  .city-card h4 { color:#0d47a1; font-size:15px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+  .city-card .badge { background:#1976d2; color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; }
+  .city-card ul { list-style:none; padding:0; margin:6px 0 0; font-size:12.5px; }
+  .city-card ul li { padding:3px 0; border-bottom:1px dashed #eee; }
+  .city-card ul li:last-child { border:none; }
+  .timeline { border-left:3px solid #1976d2; padding-left:18px; margin-left:6px; }
+  .timeline-item { margin-bottom:14px; position:relative; }
+  .timeline-item::before { content:""; position:absolute; left:-25px; top:6px; width:12px; height:12px; background:#1976d2; border-radius:50%; border:2px solid #fff; }
+  .timeline-item .date { font-size:12px; color:#1976d2; font-weight:600; }
+  .timeline-item .title { font-size:13px; color:#333; margin-top:2px; }
+  .key-finding { background:#fff8e1; border-left:4px solid #f9a825; padding:10px 14px; margin:8px 0; border-radius:0 8px 8px 0; font-size:13px; }
+  .footer { text-align:center; padding:20px; font-size:12px; color:#888; }
+  canvas { max-height:340px; }
+  .full-table-wrapper { overflow-x:auto; }
+  @media (max-width:900px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌙 江苏13市共青团「青年夜校」推文数据平台</h1>
+  <p>数据来源：各市团委官方公众号（青春+城市名）｜检索时间范围：2024.1.1 — 2026.8.21</p>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<div class="container">
+
+  <!-- 1. 城市概览 -->
+  <div class="section">
+    <h2>📊 13市青年夜校推文总览</h2>
+    <div class="grid-3" id="cityCards"></div>
+  </div>
+
+  <!-- 2. 图表分析 -->
+  <div class="section">
+    <h2>📈 数据可视化分析</h2>
+    <div class="grid-2">
+      <div><h3>各市推文数量</h3><canvas id="chartArticles"></canvas></div>
+      <div><h3>各市课程丰富度（去重课程数）</h3><canvas id="chartCourses"></canvas></div>
+    </div>
+    <div class="grid-2" style="margin-top:16px;">
+      <div><h3>宣传视频分布</h3><canvas id="chartVideo"></canvas></div>
+      <div><h3>高频课程 TOP15</h3><canvas id="chartTopCourses"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 3. 盐城大丰专题 -->
+  <div class="section">
+    <h2>🎯 盐城大丰共青团 · 青年夜校专题</h2>
+    <div class="grid-2">
+      <div>
+        <h3>推文时间线</h3>
+        <div class="timeline" id="dafengTimeline"></div>
+      </div>
+      <div>
+        <h3>关键发现</h3>
+        <div class="key-finding"><b>视频情况：</b>大丰共青团推文全部为<b>图文形式</b>，未发现独立宣传视频，含课堂现场照片。</div>
+        <div class="key-finding"><b>主阵地：</b>创想家人才社区服务中心 + 盐城经开区1992人才会客厅。</div>
+        <div class="key-finding"><b>合作方：</b>团区委 + 区城建集团 + 区人社局 + 新团职校 + 卯酉职校 + 大丰瓷刻非遗工坊。</div>
+        <div class="key-finding"><b>供稿人：</b>宗文清（高频）、韦璇、冯嘉瑞等。</div>
+        <div class="key-finding"><b>课程特色：</b>2026年起升级为"技能夜校"，大丰瓷刻（国家级非遗）+ 互联网直播 + 消防操作 + 养老护理等就业导向课程。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 完整数据表格 -->
+  <div class="section">
+    <h2>📋 完整推文数据表（可筛选）</h2>
+    <div class="filters">
+      <label>城市：</label>
+      <select id="filterCity"><option value="">全部</option></select>
+      <label>是否含视频：</label>
+      <select id="filterVideo">
+        <option value="">全部</option>
+        <option value="yes">含视频</option>
+        <option value="no">无视频</option>
+      </select>
+      <label>关键词：</label>
+      <input id="filterKeyword" placeholder="如：AI、烘焙、八段锦" style="width:180px;">
+      <button onclick="applyFilter()">筛选</button>
+      <button onclick="resetFilter()">重置</button>
+      <span id="filterCount" style="font-size:12px;color:#666;margin-left:8px;"></span>
+    </div>
+    <div class="full-table-wrapper">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>#</th><th>城市</th><th>公众号</th><th>推文标题</th>
+            <th>发布时间</th><th>课程列表</th><th>场地</th>
+            <th>费用</th><th>覆盖人群</th><th>含视频</th><th>核心亮点</th><th>原文链接</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- 5. 课程对比表 -->
+  <div class="section">
+    <h2>🏫 各市高频课程对比</h2>
+    <div class="full-table-wrapper">
+      <table id="courseTable">
+        <thead>
+          <tr>
+            <th>城市</th><th>运动健身</th><th>文化艺术</th><th>技能/AI</th>
+            <th>非遗手作</th><th>养生/中医</th><th>社交/职场</th>
+          </tr>
+        </thead>
+        <tbody id="courseTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. 运营模型总结 -->
+  <div class="section">
+    <h2>🔍 全省运营模型总结</h2>
+    <div class="grid-2">
+      <div>
+        <h3>共同特征</h3>
+        <ul style="font-size:13px;line-height:2;">
+          <li>✅ <b>官方唯一性</b>：每市均以"青春+城市名"为唯一官方公众号发布</li>
+          <li>✅ <b>公益为主</b>：90%以上课程免费，仅收取材料/成本费</li>
+          <li>✅ <b>实名制+限额</b>：18-45岁青年，先到先得</li>
+          <li>✅ <b>青年之家为核心阵地</b>：依托党群服务中心、青少年宫</li>
+          <li>✅ <b>AI课程成标配</b>：2025下半年起全面接入AI赋能课程</li>
+        </ul>
+      </div>
+      <div>
+        <h3>差异化亮点</h3>
+        <ul style="font-size:13px;line-height:2;">
+          <li>🏙️ <b>南京</b>：宁青Yeah校·栖彩学堂（七彩课程体系+送课上门）</li>
+          <li>🏙️ <b>苏州</b>：江苏青年AI卡统一报名（数字化程度最高）</li>
+          <li>🏙️ <b>无锡</b>："1+8+N"四级网络覆盖（市-区-街道-社区）</li>
+          <li>🏙️ <b>常州</b>：AI课程金字招牌（44次课/10个点位）</li>
+          <li>🏙️ <b>镇江</b>：登上《中国共青团》杂志（经验全国推广）</li>
+          <li>🏙️ <b>南通</b>："1+8+N"全域算力网（AI虚拟主持人启航）</li>
+          <li>🏙️ <b>盐城</b>：人社+团委联合"技能夜校"（就业导向最强）</li>
+          <li>🏙️ <b>宿迁</b>：首家试点泗阳（"青年点单+团团开课"模式）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. 视频专项 -->
+  <div class="section">
+    <h2>🎬 宣传视频专项分析</h2>
+    <div class="key-finding"><b>核心结论：</b>江苏13市团委公众号的青年夜校推文，<b>绝大多数为图文形式</b>，仅有1篇（共享南京分公司）在推文中嵌入了短视频。宣传视频主要出现在<b>上级媒体转载</b>（如新华报业网、中国共青团杂志）和<b>短视频平台</b>（抖音/视频号）中。</div>
+    <h3>视频相关内容分布</h3>
+    <table>
+      <thead><tr><th>城市</th><th>推文含视频</th><th>上级媒体含视频</th><th>短视频平台</th></tr></thead>
+      <tbody>
+        <tr><td>南京</td><td>1篇（共享南分企业内训）</td><td>南京发布有视频素材</td><td>视频号/抖音有切片</td></tr>
+        <tr><td>苏州</td><td>无</td><td>苏州图书馆音乐会视频</td><td>苏州市青少年活动中心视频号</td></tr>
+        <tr><td>无锡</td><td>无</td><td>无锡日报有配视频</td><td>无锡民族乐团合作视频</td></tr>
+        <tr><td>其他10市</td><td>均未发现推文内嵌视频</td><td>部分有媒体转载视频</td><td>各市共青团视频号</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="footer">
+  数据来源：各市团委官方微信公众号公开推文 ｜ 检索时间：2026年8月 ｜ 共收录 52 篇核心推文 ｜ 仅供研究参考
+</div>
+
+<script>
+let DATA = null;
+const PAGE_SIZE = 10;
+let currentPage = 1;
+let filteredRows = [];
+
+async function loadData() {
+  const res = await fetch('data/youth_school_data.json');
+  DATA = await res.json();
+  init();
+}
+
+function init() {
+  renderStats();
+  renderCityCards();
+  renderCharts();
+  renderDafengTimeline();
+  initFilters();
+  renderTable();
+  renderCourseTable();
+}
+
+function renderStats() {
+  const sb = document.getElementById('statsBar');
+  const cities = DATA.cities.length;
+  const articles = DATA.cities.reduce((s,c)=>s+c.articles.length,0);
+  const withVideo = DATA.cities.reduce((s,c)=>s+c.articles.filter(a=>a.has_video).length,0);
+  const allCourses = new Set();
+  DATA.cities.forEach(c=>c.articles.forEach(a=>a.courses.forEach(co=>allCourses.add(co))));
+  sb.innerHTML = `
+    <div class="stat-card"><div class="num">${cities}</div><div class="label">覆盖城市</div></div>
+    <div class="stat-card"><div class="num">${articles}</div><div class="label">推文总数</div></div>
+    <div class="stat-card"><div class="num">${withVideo}</div><div class="label">含视频推文</div></div>
+    <div class="stat-card"><div class="num">${allCourses.size}</div><div class="label">去重课程数</div></div>
+    <div class="stat-card"><div class="num">13</div><div class="label">官方公众号</div></div>
+    <div class="stat-card"><div class="num">2024-2026</div><div class="label">检索时间范围</div></div>
+  `;
+}
+
+function renderCityCards() {
+  const wrap = document.getElementById('cityCards');
+  wrap.innerHTML = DATA.cities.map(c=>{
+    const artCount = c.articles.length;
+    const vidCount = c.articles.filter(a=>a.has_video).length;
+    const courses = new Set();
+    c.articles.forEach(a=>a.courses.forEach(co=>courses.add(co)));
+    return `<div class="city-card">
+      <h4>${c.city} <span class="badge">${artCount}篇</span></h4>
+      <div style="font-size:12px;color:#666;">📌 ${c.official_account}</div>
+      <ul>
+        <li>📄 推文：${artCount} 篇（含视频 ${vidCount} 篇）</li>
+        <li>📚 课程：${courses.size} 种</li>
+        <li>🏛️ 子账号：${c.sub_accounts.join('、')}</li>
+      </ul>
+    </div>`;
+  }).join('');
+}
+
+function renderCharts() {
+  const cities = DATA.cities.map(c=>c.city);
+  const artCounts = DATA.cities.map(c=>c.articles.length);
+  const courseCounts = DATA.cities.map(c=>{
+    const s=new Set(); c.articles.forEach(a=>a.courses.forEach(co=>s.add(co))); return s.size;
+  });
+  const vidCounts = DATA.cities.map(c=>c.articles.filter(a=>a.has_video).length);
+
+  new Chart(document.getElementById('chartArticles'),{
+    type:'bar',
+    data:{ labels:cities, datasets:[{ label:'推文数', data:artCounts, backgroundColor:'#1976d2' }] },
+    options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true} } }
+  });
+  new Chart(document.getElementById('chartCourses'),{
+    type:'bar',
+    data:{ labels:cities, datasets:[{ label:'课程数', data:courseCounts, backgroundColor:'#43a047' }] },
+    options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true} } }
+  });
+  new Chart(document.getElementById('chartVideo'),{
+    type:'doughnut',
+    data:{ labels:cities, datasets:[{ data:vidCounts, backgroundColor:cities.map((_,i)=>`hsl(${i*28},65%,55%)`) }] },
+    options:{ responsive:true, plugins:{ legend:{position:'right',font:{size:11}} } }
+  });
+
+  // Top courses
+  const courseFreq = {};
+  DATA.cities.forEach(c=>c.articles.forEach(a=>a.courses.forEach(co=>{
+    courseFreq[co]=(courseFreq[co]||0)+1;
+  })));
+  const top = Object.entries(courseFreq).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  new Chart(document.getElementById('chartTopCourses'),{
+    type:'horizontalBar',
+    data:{ labels:top.map(t=>t[0]), datasets:[{ label:'出现次数', data:top.map(t=>t[1]), backgroundColor:'#e65100' }] },
+    options:{ responsive:true, indexAxis:'y', plugins:{ legend:{display:false} }, scales:{ x:{beginAtZero:true} } }
+  });
+}
+
+function renderDafengTimeline() {
+  const tl = document.getElementById('dafengTimeline');
+  const dafeng = DATA.cities.find(c=>c.city==='盐城').articles.filter(a=>a.venue.includes('大丰')||a.source.includes('大丰')||a.title.includes('大丰')||a.organizer.includes('大丰'));
+  // Include all 盐城 articles for broader context
+  const all = DATA.cities.find(c=>c.city==='盐城').articles;
+  tl.innerHTML = all.map(a=>`
+    <div class="timeline-item">
+      <div class="date">${a.date}</div>
+      <div class="title">${a.title}</div>
+      <div style="font-size:12px;color:#555;">📍 ${a.venue} | 💰 ${a.fee} | 👥 ${a.participants}</div>
+      <div style="font-size:12px;color:#1976d2;">✨ ${a.key_feature}</div>
+    </div>
+  `).join('');
+}
+
+function initFilters() {
+  const sel = document.getElementById('filterCity');
+  DATA.cities.forEach(c=>{
+    const opt=document.createElement('option'); opt.value=c.city; opt.textContent=c.city; sel.appendChild(opt);
+  });
+}
+
+function applyFilter() {
+  const city = document.getElementById('filterCity').value;
+  const vid = document.getElementById('filterVideo').value;
+  const kw = document.getElementById('filterKeyword').value.trim().toLowerCase();
+  let rows = [];
+  DATA.cities.forEach(c=>{
+    c.articles.forEach(a=>{
+      rows.push({city:c.city, account:c.official_account, ...a});
+    });
+  });
+  if(city) rows = rows.filter(r=>r.city===city);
+  if(vid==='yes') rows = rows.filter(r=>r.has_video);
+  if(vid==='no') rows = rows.filter(r=>!r.has_video);
+  if(kw) rows = rows.filter(r=>JSON.stringify(r).toLowerCase().includes(kw));
+  filteredRows = rows;
+  currentPage = 1;
+  renderTable();
+}
+
+function resetFilter() {
+  document.getElementById('filterCity').value='';
+  document.getElementById('filterVideo').value='';
+  document.getElementById('filterKeyword').value='';
+  filteredRows = [];
+  currentPage = 1;
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  const pag = document.getElementById('pagination');
+  const allRows = filteredRows.length? filteredRows : [];
+  if(!allRows.length){
+    DATA.cities.forEach(c=>c.articles.forEach(a=>allRows.push({city:c.city,account:c.official_account,...a})));
+  }
+  document.getElementById('filterCount').textContent = `共 ${allRows.length} 条`;
+  const totalPages = Math.ceil(allRows.length/PAGE_SIZE);
+  const start = (currentPage-1)*PAGE_SIZE;
+  const pageRows = allRows.slice(start, start+PAGE_SIZE);
+  tbody.innerHTML = pageRows.map((r,i)=>`
+    <tr>
+      <td>${start+i+1}</td>
+      <td><b>${r.city}</b></td>
+      <td style="font-size:11.5px;">${r.account}</td>
+      <td style="max-width:280px;">${r.title}</td>
+      <td style="white-space:nowrap;">${r.date}</td>
+      <td style="max-width:260px;font-size:11.5px;">${r.courses.join('、')}</td>
+      <td style="max-width:180px;font-size:11.5px;">${r.venue}</td>
+      <td>${r.fee.includes('免费')?'<span class="tag tag-free">免费</span>':`<span class="tag tag-low">${r.fee}</span>`}</td>
+      <td style="font-size:11.5px;">${r.target_group}</td>
+      <td>${r.has_video?'<span class="tag tag-yes">✅ 有视频</span>':'<span class="tag tag-no">❌ 无</span>'}</td>
+      <td style="max-width:220px;font-size:11.5px;">${r.key_feature}</td>
+      <td style="font-size:11px;white-space:nowrap;"><a href="${r.url}" target="_blank" rel="noopener">原文↗</a></td>
+    </tr>
+  `).join('');
+  let pager = '';
+  for(let i=1;i<=totalPages;i++) pager+=`<button class="${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  pag.innerHTML = pager;
+}
+
+function goPage(p) { currentPage=p; renderTable(); window.scrollTo({top:document.getElementById('dataTable').offsetTop-60,behavior:'smooth'}); }
+
+function renderCourseTable() {
+  const tbody = document.getElementById('courseTableBody');
+  const cats = {运动:['羽毛球','瑜伽','八段锦','搏击','太极','拳击','乒乓球','普拉提','舞蹈','游泳','足球','动感单车','燃脂','有氧','轮滑','滑板','射箭','匹克球','爵士','芭蕾','拉丁','街舞','形体'],
+              文化:['书法','国画','素描','水彩','摄影','声乐','古琴','吉他','钢琴','笛子','扬琴','葫芦丝','非洲鼓','萨克斯','手碟','长笛','小提琴','二胡','古筝'],
+              AI技能:['AI','短视频','新媒体','直播','互联网','电脑','编程','3D','剪辑','文案','办公','AIGC','DeepSeek','人工智能','无人机','OpenClaw'],
+              非遗:['非遗','剪纸','泥人','锡绣','螺钿','陶艺','面塑','瓷刻','桃雕','皮影','绳结','香囊','缠花','宋锦','扎染','绒花','点翠','竹编','蜡片','马赛克'],
+              养生:['养生','中医','八段锦','经络','瑜伽','茶道','茶艺','艾灸','香薰','针灸','痤疮','减重','急救','CPR'],
+              职场:['面试','沟通','礼仪','职场','创业','商务','收纳','形象','美妆','穿搭','IP打造','文案','反诈']};
+  tbody.innerHTML = DATA.cities.map(c=>{
+    const allC = []; c.articles.forEach(a=>a.courses.forEach(co=>allC.push(co)));
+    function pick(list){ return [...new Set(allC.filter(x=>list.some(k=>x.includes(k)||k.includes(x))))]; }
+    const m = pick(cats.运动); const w = pick(cats.文化); const s = pick(cats.AI技能);
+    const f = pick(cats.非遗); const h = pick(cats.养生); const j = pick(cats.职场);
+    return `<tr>
+      <td><b>${c.city}</b></td>
+      <td>${m.join('、')||'-'}</td>
+      <td>${w.join('、')||'-'}</td>
+      <td>${s.join('、')||'-'}</td>
+      <td>${f.join('、')||'-'}</td>
+      <td>${h.join('、')||'-'}</td>
+      <td>${j.join('、')||'-'}</td>
+    </tr>`;
+  }).join('');
+}
+
+loadData().catch(err=>{
+  console.error('Failed to load data:',err);
+  document.body.insertAdjacentHTML('afterbegin','<div style="background:#fdd;padding:10px;text-align:center;">⚠️ 数据文件加载失败，请确保通过 HTTP 服务器访问（如 python -m http.server）</div>');
+});
+</script>
+</body>
+</html>
