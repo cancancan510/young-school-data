@@ -55,6 +55,7 @@
   .footer { text-align:center; padding:20px; font-size:12px; color:#888; }
   canvas { max-height:340px; }
   .full-table-wrapper { overflow-x:auto; }
+  .error-banner { display:none; background:#fdd; border:1px solid #f44336; color:#b71c1c; padding:10px 14px; border-radius:8px; margin-bottom:14px; font-size:13px; }
   @media (max-width:900px) { .grid-2,.grid-3 { grid-template-columns:1fr; } }
 </style>
 </head>
@@ -68,6 +69,8 @@
 <div class="stats-bar" id="statsBar"></div>
 
 <div class="container">
+
+  <div id="errorBanner" class="error-banner"></div>
 
   <!-- 1. 城市概览 -->
   <div class="section">
@@ -205,123 +208,1333 @@
 </div>
 
 <div class="footer">
-  数据来源：各市团委官方微信公众号公开推文 ｜ 检索时间：2026年8月 ｜ 共收录 52 篇核心推文 ｜ 仅供研究参考
+  数据来源：各市团委官方微信公众号公开推文 ｜ 检索时间：2026年8月 ｜ 共收录推文 ｜ 仅供研究参考
 </div>
 
 <script>
-let DATA = null;
-const PAGE_SIZE = 10;
+/* ========== 内嵌数据（无需外部 JSON 文件，双击即可打开） ========== */
+const DATA = {
+  "cities": [
+    {
+      "city": "南京",
+      "official_account": "青春南京",
+      "sub_accounts": ["青春南京", "青春共享南分", "青春栖霞", "宁青Yeah校"],
+      "articles": [
+        {
+          "title": "下班不宅家!南京江北新区葛塘这所夜校,让青年\"上头\"了!",
+          "date": "2026-07",
+          "source": "南京鑫火相传社会工作服务中心(转载自青春南京)",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzkyNjc1OTQyMw==&mid=2247488871",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "葛塘街道中山社区、新城社区",
+          "courses": ["急救技能", "书法", "烘焙", "拼豆", "宠物养护", "爵士沙龙", "螺钿手作", "咖啡读书会", "墙绘"],
+          "organizer": "葛塘街道团工委",
+          "target_group": "辖区青年居民、高校学子",
+          "fee": "免费",
+          "participants": "累计300+人次",
+          "key_feature": "夜校巡回、社区轮播、青年社群"
+        },
+        {
+          "title": "青年夜校丨南京栖霞:点亮\"栖\"彩学堂,青春别young精彩",
+          "date": "2024-2026",
+          "source": "团建头条(转载自青春南京)",
+          "url": "http://mp.weixin.qq.com/s?__biz=Mzg5ODc1OTQ1Mg==&mid=2247609815",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "栖霞区青年之家、政务服务中心",
+          "courses": ["微团课", "形势政策宣讲", "法律公开课", "青创小讲堂", "社保政策", "简历诊断", "收纳整理", "婚恋交友", "非遗手作"],
+          "organizer": "团南京市栖霞区委",
+          "target_group": "职场青年(午间+晚间)",
+          "fee": "公益免费",
+          "participants": "持续运营中",
+          "key_feature": "宁青Yeah校·栖彩学堂、七彩课程体系、送课上门"
+        },
+        {
+          "title": "\"延时服务\"不打烊!共享南京分公司青年夜校火热开班",
+          "date": "2025-2026",
+          "source": "青春共享南分",
+          "url": "http://mp.weixin.qq.com/s?__biz=Mzg3MTIxNTc1NQ==&mid=2247504516",
+          "content_type": "图文+视频",
+          "has_video": true,
+          "video_count": 1,
+          "venue": "南京本部、扬州服务部、武汉服务部",
+          "courses": ["羽毛球", "摄影摄像", "燃脂搏击", "爵士舞蹈", "瑜伽普拉提"],
+          "organizer": "共享南京分公司团委",
+          "target_group": "企业青年员工",
+          "fee": "企业内训免费",
+          "participants": "多校区同步",
+          "key_feature": "五维课堂、三地分校、视频报道"
+        },
+        {
+          "title": "南京,何以\"圈粉\"年轻人",
+          "date": "2026",
+          "source": "南京发布(提及青春南京)",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312029",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "宁青夜校各点位",
+          "courses": ["非遗绳结", "掐丝珐琅", "陶印", "职场技能", "身心疗愈", "法律科普"],
+          "organizer": "团南京市委",
+          "target_group": "全市青年",
+          "fee": "公益为主",
+          "participants": "任芸汐参与超100次",
+          "key_feature": "宁青驿站+青年夜校+青春市集联动"
+        }
+      ]
+    },
+    {
+      "city": "苏州",
+      "official_account": "青春苏州",
+      "sub_accounts": ["青春苏州", "苏州市青少年活动中心"],
+      "articles": [
+        {
+          "title": "上新炸场!第八期苏州市\"青年夜校\"开启报名~",
+          "date": "2026-03",
+          "source": "青春苏州",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5MDcwMTg2MQ==&mid=2650734510",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "苏州市青少年活动中心(姑苏区南门路8号)",
+          "courses": ["手碟", "萨克斯", "电吹管", "话剧表演", "钢琴", "吉他", "咖啡", "西点烘焙", "形体芭蕾", "茶道养生", "3D打印", "非遗文创手作", "韩语", "美妆礼仪"],
+          "organizer": "团苏州市委、苏州市青少年活动中心",
+          "target_group": "18周岁以上青年",
+          "fee": "600元/10次课(部分)",
+          "participants": "45门课程",
+          "key_feature": "第八期、10大新课、觅渡桥西大运河畔"
+        },
+        {
+          "title": "专属夏天的42个清凉选择!苏州市青年夜校暑期班开招!",
+          "date": "2026-06",
+          "source": "青春苏州",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5MDcwMTg2MQ==&mid=2650736632",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "苏州市青少年活动中心",
+          "courses": ["面包烘焙", "咖啡", "钢琴", "小提琴", "竹笛", "古琴", "萨克斯", "吉他", "手碟", "形体芭蕾", "古典舞", "Barre芭杆", "搏击", "爵士舞", "陶艺", "国画", "书法", "乒乓", "韩语", "美妆礼仪", "艺术表达", "浮雕肌理花卉"],
+          "organizer": "团苏州市委",
+          "target_group": "18岁+青年",
+          "fee": "480-640元/8次课+材料费",
+          "participants": "27门课程、42个时间段",
+          "key_feature": "第九期、江苏青年AI卡报名、暑期班"
+        },
+        {
+          "title": "急!苏州市青年夜校暑期班报名补充通知",
+          "date": "2026-06",
+          "source": "苏州市青少年活动中心",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzA3NjI1MTUyNw==&mid=2241966411",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "苏州市青少年活动中心",
+          "courses": ["面包烘焙", "咖啡", "美妆礼仪", "陶艺", "国画", "板绘", "浮雕肌理花卉", "文创非遗手作", "书法", "话剧表演", "钢琴", "吉他", "声乐", "小提琴", "竹笛", "萨克斯", "手碟", "长笛", "古琴", "乒乓球", "搏击", "爵士舞", "古典舞", "形体芭蕾", "Barre芭杆", "茶道养生"],
+          "organizer": "苏州市青少年活动中心",
+          "target_group": "18-40周岁",
+          "fee": "100元起(部分80元/节)",
+          "participants": "28项精品课程",
+          "key_feature": "双通道报名(江苏青年AI卡+人工直通车)"
+        }
+      ]
+    },
+    {
+      "city": "无锡",
+      "official_account": "青春无锡",
+      "sub_accounts": ["青春无锡", "团聚无锡", "无锡日报"],
+      "articles": [
+        {
+          "title": "用心用情打造\"无锡青年夜校\"品牌",
+          "date": "2025-Q3",
+          "source": "团聚无锡",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5MTM3NjUyMQ==&mid=2650766975",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "无锡市青少年活动中心+8个区级阵地",
+          "courses": ["古筝", "丙烯肌理画", "滑冰", "非遗手作", "皮具制作", "软件开发", "咖啡", "瑜伽", "书法", "国画", "SolidWorks", "短视频剪辑", "插花", "茶果子", "搏击操", "美妆", "钩针编织"],
+          "organizer": "团无锡市委(\"1+8+N\"体系)",
+          "target_group": "全市青年",
+          "fee": "公益为主",
+          "participants": "累计6600+人次(单季)",
+          "key_feature": "市级+江阴+宜兴+梁溪+锡山+惠山+滨湖+新吴+经开区全覆盖"
+        },
+        {
+          "title": "\"锡青夜校\",点亮城市新\"夜\"态!",
+          "date": "2025-12",
+          "source": "无锡日报",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "无锡开放大学远程教育大楼13楼等",
+          "courses": ["声乐", "惠山泥人", "锡绣", "中医针灸", "短视频剪辑", "咖啡拉花", "即兴戏剧", "竞技魔方"],
+          "organizer": "无锡市教育局牵头+团市委协同",
+          "target_group": "中青年群体",
+          "fee": "公益(2024年初启动)",
+          "participants": "四级网络覆盖",
+          "key_feature": "民生实事项目、报名靠\"抢\""
+        },
+        {
+          "title": "【无锡青年夜校】8月课程开始招募啦!",
+          "date": "2026-08",
+          "source": "团聚无锡",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5MTM3NjUyMQ==&mid=2650818649",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "无锡青少年活动中心(梁溪区青年路9号等)",
+          "courses": ["个人形象管理", "古筝基础", "漫谈城市更新与无锡文脉", "极简代码自动化/python职场提效", "国际形势与热点分析", "独立游戏幕后", "OPC海外营销与跨境获客"],
+          "organizer": "团无锡市委、无锡市青少年发展服务中心",
+          "target_group": "全市青年",
+          "fee": "公益为主",
+          "participants": "持续招募中",
+          "key_feature": "锡跃SPACE品牌、青春无锡小程序报名"
+        }
+      ]
+    },
+    {
+      "city": "常州",
+      "official_account": "青春常州",
+      "sub_accounts": ["常州青年", "常州市青年夜校", "常州市青少年活动中心"],
+      "articles": [
+        {
+          "title": "常州市青年夜校|报名开启!在夜晚,为自己种下一颗发光的种子",
+          "date": "2026-06",
+          "source": "常州市青少年活动中心",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzkzODYzNjQwMQ==&mid=2247633484",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "本部+武进+钟楼+新北四校区",
+          "courses": ["古琴", "气血养生", "素人新媒体", "人工智能", "中式花艺", "AI神器8讲", "视频神剪", "轮滑", "编织开衫", "笛子", "扬琴", "素描", "陶艺", "书法", "八段锦", "拳击", "羽毛球", "瑜伽", "彩绒画"],
+          "organizer": "团常州市委、常州市青少年活动中心",
+          "target_group": "全市青年",
+          "fee": "公益+低成本",
+          "participants": "四校区同步",
+          "key_feature": "四校区覆盖、AI课程金字招牌"
+        },
+        {
+          "title": "AI青年夜校来了!常州er解锁充电新赛道!",
+          "date": "2025-2026",
+          "source": "常州市青年夜校(转载自常州青年)",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "常州市青少年活动中心+规划馆校区+金坛站等10个点位",
+          "courses": ["DeepSeek大数据模型", "OpenClaw技术实战", "AI数据分析", "即梦AI艺术创作"],
+          "organizer": "团常州市委",
+          "target_group": "全市青年",
+          "fee": "公益免费",
+          "participants": "累计开课44次、覆盖近千人",
+          "key_feature": "AI全域覆盖10个点位、不讲理论只教实操"
+        },
+        {
+          "title": "常州市青年夜校|告别内耗!用新方式打开下班后的夜生活!",
+          "date": "2026",
+          "source": "常州市青少年活动中心",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzkzODYzNjQwMQ==&mid=2247634287",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "本部+西太湖+大学城+钟楼+新北",
+          "courses": ["AI工具实战", "短视频剪辑", "古琴", "养生", "素描", "咖啡", "花艺", "轮滑", "编织", "笛子", "扬琴", "瑜伽", "普拉提", "太极", "射箭", "滑板", "二胡", "钢琴", "芭蕾", "拉丁", "爵士", "主持"],
+          "organizer": "常州市青少年活动中心",
+          "target_group": "全市青年",
+          "fee": "公益+低成本",
+          "participants": "多校区多班次",
+          "key_feature": "五校区全网更新、AI+艺术+运动全覆盖"
+        }
+      ]
+    },
+    {
+      "city": "镇江",
+      "official_account": "青春镇江",
+      "sub_accounts": ["青春镇江", "青春丹徒"],
+      "articles": [
+        {
+          "title": "镇江青年夜校丨2026开年71门课程焕新登场:全城覆盖,镇青YEAH校等你来!",
+          "date": "2026-01",
+          "source": "青春镇江",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NzAxMzM5Mg==&mid=2649745613",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "全市多个点位(商圈、社区、艺术空间)",
+          "courses": ["八段锦", "花式穿搭", "舞蹈", "主持朗诵", "短视频制作", "博主起步", "彩妆", "高尔夫", "戏曲", "陶艺"],
+          "organizer": "团镇江市委",
+          "target_group": "18-45周岁",
+          "fee": "公益为主+部分成本费",
+          "participants": "2025年累计1万+人次",
+          "key_feature": "镇青YEAH校品牌、\"3+8+N\"网络、登上《中国共青团》杂志"
+        },
+        {
+          "title": "镇江青年夜校|7月夜校盲盒已备好!117种夜晚新玩法",
+          "date": "2026-07",
+          "source": "青春镇江",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NzAxMzM5Mg==&mid=2649744633",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "吾悦商圈、财富广场、社区党群服务中心、茶艺工作室、咖啡店、艺术空间",
+          "courses": ["无人机航拍", "视频剪辑", "养生健身", "非洲鼓", "拉丁热舞", "芭蕾形体", "中国古典舞", "羽毛球", "瑜伽", "八段锦", "太极拳", "CPR急救", "美妆穿搭", "IP打造", "求职面试", "越剧非遗", "名著带读"],
+          "organizer": "团镇江市委",
+          "target_group": "18-45周岁",
+          "fee": "公益+部分成本费",
+          "participants": "117门课程",
+          "key_feature": "7月加量不加价、全市教学点位全覆盖"
+        },
+        {
+          "title": "镇江青年夜校|8月限定!100种夏夜新剧情,约不约?",
+          "date": "2026-08",
+          "source": "青春镇江",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NzAxMzM5Mg==&mid=2649745613",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "吾悦商圈党群服务站、赵斌茶艺大师工作室、首骏文化广场、财富广场",
+          "courses": ["咖啡手作", "茶艺品鉴", "油画涂鸦", "陶艺刻瓷", "非洲鼓", "拉丁舞", "芭蕾形体", "中国古典舞", "羽毛球", "瑜伽", "八段锦", "太极拳", "三伏养生", "急救培训", "无人机航拍", "美妆穿搭", "IP打造", "求职面试", "越剧非遗", "名著带读"],
+          "organizer": "团镇江市委",
+          "target_group": "18-45周岁",
+          "fee": "公益+部分成本费",
+          "participants": "100种课程",
+          "key_feature": "8月限定、免费公益课+低成本体验课"
+        },
+        {
+          "title": "拿捏职场礼仪!镇江青年夜校这堂课太顶了",
+          "date": "2026-03",
+          "source": "青春镇江",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NzAxMzM5Mg==&mid=2649741744",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "镇江市青年夜校",
+          "courses": ["商务礼仪", "职业形象塑造", "商务会面沟通", "求职面试礼仪", "跨文化交际"],
+          "organizer": "团镇江市委+市人社局\"技能夜校\"+市现代精英职业培训学校",
+          "target_group": "高校毕业生、在校大学生、职场新人、返乡创业青年",
+          "fee": "公益免费",
+          "participants": "专场培训",
+          "key_feature": "部门协同、茅蓉老师(正高级讲师/镇江市劳动模范)授课"
+        },
+        {
+          "title": "镇江青年夜校丨烟花三月,团团邀请你一起春意盎\"燃\"",
+          "date": "2026-03",
+          "source": "青春镇江",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "全市各点位",
+          "courses": ["商务礼仪", "轻创业商业计划", "短视频剪辑速成", "职场穿搭", "舞蹈", "乐器", "绘画", "茶艺", "咖啡"],
+          "organizer": "团镇江市委",
+          "target_group": "18-45周岁",
+          "fee": "公益+成本费",
+          "participants": "83门课程",
+          "key_feature": "烟花三月春季课程"
+        }
+      ]
+    },
+    {
+      "city": "南通",
+      "official_account": "青春南通",
+      "sub_accounts": ["青春南通", "南通市青少年活动中心", "通州青年", "温度紫琅", "南通高新区"],
+      "articles": [
+        {
+          "title": "全城\"算力\"已激活!这场AI夜校,为何让南通青年\"充电\"到深夜?",
+          "date": "2026-03",
+          "source": "南通市青少年活动中心",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzIzODM2Njk4Ng==&mid=2247518471",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "崇川区委党校+万象城分校+学田分校+星月智创园分校+任港分校+海门+启东+海安+如东+如皋+通州等30多个点位",
+          "courses": ["DeepSeek大数据", "AIGC短片制作", "AI公文写作", "AI动漫影视", "AI+PPT", "AI+研发", "防范AI诈骗", "AI+设计"],
+          "organizer": "团南通市委(\"一中心多分校\"体系)",
+          "target_group": "全市青年",
+          "fee": "公益免费",
+          "participants": "100+场培训计划、覆盖近千人",
+          "key_feature": "\"1+8+N\"全域算力网、AI虚拟主持人启航"
+        },
+        {
+          "title": "定好闹钟,12点开抢!创新区青年夜校报名即将开启",
+          "date": "2026-03",
+          "source": "温度紫琅",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "南通创新区",
+          "courses": ["AI人工智能", "瑜伽", "中医养生推拿", "匹克球", "爵士舞", "咖啡拉花", "非遗手工"],
+          "organizer": "团南通市委(创新区分校)",
+          "target_group": "22-40周岁",
+          "fee": "免费",
+          "participants": "第五期",
+          "key_feature": "每人限报一门、实名制抢课"
+        },
+        {
+          "title": "免费!南通人下班后的好去处!27日起报名",
+          "date": "2026-07",
+          "source": "企鹅号(转载自青春南通)",
+          "url": "https://so.html5.qq.com/page/real/search_news?docid=70000021_1996a647e4609852",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "南通市青少年活动中心C3211+创新区OPC社区",
+          "courses": ["AI搭子进化局(8课时)", "AIGC短片教学与变现实战(4课时)", "游泳", "普拉提", "主持表达"],
+          "organizer": "团南通市委",
+          "target_group": "22-40周岁",
+          "fee": "免费",
+          "participants": "暑期班",
+          "key_feature": "四大潮流课程、暑期特别班"
+        },
+        {
+          "title": "夜色为伴,成长不歇丨通州区青年夜校双课齐发!",
+          "date": "2026-06",
+          "source": "通州青年",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "通州区江海同舟党群服务中心+活力天地体育公园",
+          "courses": ["普法小课堂(租房/恋爱/职场法律)", "网球入门"],
+          "organizer": "团通州区委+区委政法委+区法院+区法学会",
+          "target_group": "辖区青年",
+          "fee": "免费",
+          "participants": "40人(普法)+10人(网球)",
+          "key_feature": "\"法治润青春\"真实案例拆解"
+        },
+        {
+          "title": "夜校聚青春 服务业赋新能|南通高新区青年夜校火热开课",
+          "date": "2026",
+          "source": "南通高新区",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzYzMjY2NjA1Mg==&mid=2247512043",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "星辰·翼酷体育中心+江海智汇园+智汇健身共享空间",
+          "courses": ["羽毛球(前新加坡/印尼国家队教练)", "吉他", "普拉提"],
+          "organizer": "南通高新区团委",
+          "target_group": "园区青年职工",
+          "fee": "公益免费",
+          "participants": "20+人(羽毛球首期)",
+          "key_feature": "外籍教练执教、园区服务业联动"
+        }
+      ]
+    },
+    {
+      "city": "扬州",
+      "official_account": "青春扬州",
+      "sub_accounts": ["青春扬州", "青春广陵", "青春江都", "邗江青年", "仪征青年", "宝应共青团", "青春高邮"],
+      "articles": [
+        {
+          "title": "2026扬州青年夜校丨下班充电,解锁N种生活新可能",
+          "date": "2026-04",
+          "source": "青春扬州",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NjUwNzg4Mg==&mid=2702232750",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "全市各县区(宝应、江都、广陵、邗江、景区等)",
+          "courses": ["游泳", "羽毛球", "乒乓球", "非遗扎染", "剪纸", "结绳", "咖啡", "减脂餐", "花艺", "茶艺", "素描", "职业规划", "美妆", "鲁班手作", "汉服", "通草花", "宠物护理"],
+          "organizer": "团扬州市委+各县区团委",
+          "target_group": "在职青年",
+          "fee": "免费+低价(39.9-200元)",
+          "participants": "全市覆盖",
+          "key_feature": "五大方向(运动/国潮/深夜厨房/都市养生/文艺)"
+        },
+        {
+          "title": "扬州青年夜校第四期|解锁新潮生活方式,做朋友圈最会玩的崽!",
+          "date": "2025-09",
+          "source": "青春扬州",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NjUwNzg4Mg==&mid=2702220637",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "宝In+人才公寓·荷硕苑、三湾公园、邗江区兰庄社区、万象汇、仁丰里等",
+          "courses": ["非洲鼓", "瑜伽", "萨克斯", "乒乓球", "古琴", "伦巴", "唱歌", "摄影", "网络创业", "无人机", "美妆", "新媒体", "书法", "鲁班课堂", "汉民族饰品", "结绳", "陶瓷绘画", "非遗剪纸", "鸭蛋香粉", "香道", "冷凝香", "毛线卷针绣", "理疗瑜伽", "八段锦", "巧果手作", "中医面包"],
+          "organizer": "团扬州市委",
+          "target_group": "全市青年",
+          "fee": "免费+低价(20-399元)",
+          "participants": "第四期",
+          "key_feature": "国潮觉醒+科技玩家+暴汗+深夜厨房+都市养生五大宇宙"
+        },
+        {
+          "title": "共青团扬州市委员会关于青年夜校的声明",
+          "date": "2024-04",
+          "source": "青春广陵(转载自青春扬州)",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzA5OTYwNDA3Mg==&mid=2649607267",
+          "content_type": "图文(声明)",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "全市党群服务中心+青年之家",
+          "courses": ["全部官方课程"],
+          "organizer": "团扬州市委(官方平台声明)",
+          "target_group": "全市青年",
+          "fee": "原则上免费",
+          "participants": "声明性质",
+          "key_feature": "官方声明7个公众号+小红书、打击山寨夜校"
+        },
+        {
+          "title": "扬州经开区|人才社区开夜校 青年安居添活力",
+          "date": "2026",
+          "source": "青春扬州(转载)",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "漫柏运河湾人才社区",
+          "courses": ["手机摄影", "剪映剪辑", "AI视频创作", "爵士舞", "美妆"],
+          "organizer": "扬州经开区人才办+团委",
+          "target_group": "人才社区青年职工",
+          "fee": "免费",
+          "participants": "首期开班",
+          "key_feature": "\"人才社区+青年夜校\"融合模式"
+        },
+        {
+          "title": "县区动态|扬州邗江汽车智造产业园人才社区举办\"青年夜校\"面点班",
+          "date": "2026",
+          "source": "人才扬州",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzI3NTg5MDE3Nw==&mid=2247566735",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "邗江汽车智造产业园人才社区",
+          "courses": ["西式面点(千层甜品)"],
+          "organizer": "团邗江区委(槐泗镇)",
+          "target_group": "园区青年职工",
+          "fee": "免费",
+          "participants": "20+人",
+          "key_feature": "\"槐下有约 泗季有声\"品牌、党建+人才社区"
+        }
+      ]
+    },
+    {
+      "city": "盐城",
+      "official_account": "青春盐城",
+      "sub_accounts": ["青春盐城", "盐都青年", "大丰共青团", "青春滨海", "青春射阳", "响水共青团", "青春建湖", "青春亭湖", "盐城经开区人才", "阜宁共青团", "东台共青团"],
+      "articles": [
+        {
+          "title": "青年夜校,盐城青年新式\"打卡地\"",
+          "date": "2025",
+          "source": "中国共青团杂志(团盐城市委投稿)",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzI5NDI5MDQ2MA==&mid=2248106318",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "全市青年之家等团属阵地",
+          "courses": ["烘焙", "淮剧唱段", "中医养生", "健身减脂", "短视频剪辑", "八段锦", "动感单车", "非遗剪纸", "淮歌朝唱", "艺术插花", "面塑"],
+          "organizer": "团盐城市委",
+          "target_group": "全市青年",
+          "fee": "公益免费",
+          "participants": "18期、130+节课程、3400+人次",
+          "key_feature": "盐都\"七点半\"夜校品牌、全市矩阵"
+        },
+        {
+          "title": "白天实习,晚上\"充电\"!在盐实习实践大学生的暑假,这样过才够味!",
+          "date": "2026-08",
+          "source": "青春盐城",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "阜宁县、滨海县、射阳县、大丰区、响水县、盐都区等",
+          "courses": ["肌理画", "螺钿手作", "养生茶", "艾草锤", "香水DIY", "油画", "融蜡调香", "叠沙造景", "水晶画", "本草讲堂", "中药串珠", "八段锦", "瑜伽", "面塑", "AI技能", "短视频"],
+          "organizer": "团盐城市委+各县区团委",
+          "target_group": "在盐实习大学生+全市青年",
+          "fee": "公益免费",
+          "participants": "暑期全市覆盖",
+          "key_feature": "\"技能提升\"主题暑期夜校、我的盐城APP预约"
+        },
+        {
+          "title": "周末去哪\"充电\"?就来盐城青年夜校!课程上新啦→",
+          "date": "2026",
+          "source": "我的盐城APP(转载)",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzkwNjMzMDkzMg==&mid=2247590822",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "射阳县、滨海县、东台市、阜宁县、响水县等",
+          "courses": ["军体拳", "朋克机器人", "宋锦团扇", "摄影", "穿搭", "AI", "沟通", "互联网营销", "人工智能训练师", "拼豆", "尤克里里", "瑜伽", "游泳", "AI漫剧", "水晶香皂", "沙画香薰"],
+          "organizer": "团盐城市委",
+          "target_group": "全市青年",
+          "fee": "公益为主",
+          "participants": "暑期全覆盖",
+          "key_feature": "\"我的盐城\"APP一键预约、青年Ai卡"
+        },
+        {
+          "title": "智启职场,悦动青春|盐城经开区青年夜校第十期重磅开营!",
+          "date": "2026-05",
+          "source": "盐城经开区人才(1992人才会客厅)",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzkwMDY3MzE0MQ==&mid=2247541471",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "盐城经开区1992人才会客厅",
+          "courses": ["AI赋能职场(文案/表格/数据处理)", "尊巴燃脂舞蹈"],
+          "organizer": "盐城经开区团委",
+          "target_group": "经开区青年职工",
+          "fee": "免费",
+          "participants": "第十期",
+          "key_feature": "彭海华老师(国际劳工组织创业培训讲师/工信部高级AIGC工程师)"
+        },
+        {
+          "title": "焕新登场!盐都青年YE校2.0邀你共赴春日之约",
+          "date": "2026-03",
+          "source": "盐都青年",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "盐都区青年之家",
+          "courses": ["青团DIY", "手绘风筝", "萌宠交流", "手工植物风铃", "匹克球", "形体瑜伽", "户外摄影"],
+          "organizer": "团盐都区委",
+          "target_group": "盐都青年",
+          "fee": "免费",
+          "participants": "工作日+周末双模式",
+          "key_feature": "YE校2.0、工作日19:30-21:00+周末14:30-16:00"
+        },
+        {
+          "title": "青春不打烊!大丰区青年夜校12月课程上新啦~",
+          "date": "2025-12",
+          "source": "大丰共青团",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NDU5NjcyNQ==&mid=2695431474",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "创想家人才社区服务中心",
+          "courses": ["韩式蛋糕裱花", "韩语入门", "热浪塑形体雕"],
+          "organizer": "团大丰区委+区城建集团",
+          "target_group": "大丰区青年人才",
+          "fee": "免费",
+          "participants": "12月课程",
+          "key_feature": "创想家·青年发展型优居街区、宗文清供稿"
+        },
+        {
+          "title": "免费学技能!2026年大丰区\"技能夜校\"开课啦",
+          "date": "2026-02",
+          "source": "盐城大丰人社",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzkzNjI4ODY5Nw==&mid=2247493768",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "大丰区健康东路89号、西康南路61号、丰华街道奥体中心等",
+          "courses": ["养老护理员", "互联网直播", "视频拍摄剪辑推广", "茶艺", "消防设施操作", "大丰瓷刻非遗", "视频制作", "中式面点师", "整理收纳师"],
+          "organizer": "大丰区人社局+团区委",
+          "target_group": "全区青年(就业导向)",
+          "fee": "全部免费",
+          "participants": "每班30人",
+          "key_feature": "人社+团委联合、陈银付大师(大丰瓷刻)授课、技能等级认定"
+        }
+      ]
+    },
+    {
+      "city": "淮安",
+      "official_account": "青春淮安",
+      "sub_accounts": ["青春淮安", "青春淮阴", "青春涟水", "青春洪泽", "青春盱眙", "清江浦共青团", "淮安区共青团", "青春金湖"],
+      "articles": [
+        {
+          "title": "淮安青年夜校2025年课程表大曝光!手慢无→",
+          "date": "2025",
+          "source": "青春淮安",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NTM0OTI1Mg==&mid=2651946202",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "全市各县区",
+          "courses": ["非遗剪纸", "中医香囊", "非遗面塑", "陶艺绘画", "瑜伽", "中医养生", "八段锦", "茶艺", "急救培训", "西点烘焙", "动感单车", "羽毛球", "VR交互动画"],
+          "organizer": "团淮安市委",
+          "target_group": "全市青年",
+          "fee": "90%免费+少量材料费",
+          "participants": "全市覆盖",
+          "key_feature": "\"零基础\"全覆盖、材料费≈少加两份小料的钱"
+        },
+        {
+          "title": "淮安青年夜校点亮\"夜生活\"!2025年下半年课程全新升级!",
+          "date": "2025-06",
+          "source": "青春淮安",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NTM0OTI1Mg==&mid=2651962612",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "清江浦区、淮安区、淮阴区、洪泽区、涟水县、盱眙县等",
+          "courses": ["瑜伽", "八段锦", "口腔护理", "心理健康", "博里农民画", "足球", "塑形", "乒乓球", "减脂", "书法", "非遗剪纸", "急救", "钩织", "普拉提", "颈椎康复", "小龙虾烹饪", "体育舞蹈", "有氧减脂", "新媒体运营", "职场解压"],
+          "organizer": "团淮安市委+各县区团委",
+          "target_group": "全市青年",
+          "fee": "公益免费为主",
+          "participants": "淮安区10期200+人、盱眙10期500+人",
+          "key_feature": "2.0升级、下半年课程信息表完整公布"
+        },
+        {
+          "title": "青年发展型城市|淮安万象城青年发展型街区推出\"青年夜校\"啦!",
+          "date": "2025-11",
+          "source": "清江浦共青团",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5MDAwOTMyOA==&mid=2651840754",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "乐刻运动健身(淮安万象城店)",
+          "courses": ["哈达瑜伽", "BODYATTACK有氧燃脂"],
+          "organizer": "团清江浦区委",
+          "target_group": "18-45周岁",
+          "fee": "免费",
+          "participants": "每班限额",
+          "key_feature": "青年发展型街区+万象城商圈"
+        },
+        {
+          "title": "涟水「青年夜校・就业驿站」免费开班!",
+          "date": "2026-08",
+          "source": "青春涟水",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "淮安市众创职业技能培训学校",
+          "courses": ["短视频拍摄剪辑", "直播实操运营"],
+          "organizer": "团涟水县委+江苏青年AI卡",
+          "target_group": "涟水青年(就业导向)",
+          "fee": "免费",
+          "participants": "14天连续培训",
+          "key_feature": "网络达人\"熊老板\"合作、可变现技能"
+        },
+        {
+          "title": "淮青学堂|\"绿茵逐风 燃动青春\"热血开踢!",
+          "date": "2026-06",
+          "source": "淮安区共青团",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312037",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "淮安区蓝数字产业园十号足球俱乐部",
+          "courses": ["足球竞技(控球/带球/传球/射门)"],
+          "organizer": "团淮安区委+区教体局",
+          "target_group": "淮安区青年",
+          "fee": "免费",
+          "participants": "两期",
+          "key_feature": "马福丞教练(亚足联/中国足协A级教练)"
+        },
+        {
+          "title": "巷遇青春|千年河下的双向奔赴密码",
+          "date": "2025-2026",
+          "source": "淮安区共青团(中国共青团杂志推介)",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312037",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "河下古镇吴鞠通中医馆",
+          "courses": ["国学文化中医(舌诊)", "八段锦", "足球", "AI", "陶笛", "烘焙"],
+          "organizer": "团淮安区委",
+          "target_group": "河下古镇青年",
+          "fee": "免费",
+          "participants": "累计30期、24种课程",
+          "key_feature": "\"淮青学堂\"品牌、中国共青团杂志推介"
+        }
+      ]
+    },
+    {
+      "city": "连云港",
+      "official_account": "青春连云港",
+      "sub_accounts": ["连云港青年", "连云新青年", "青春连云", "圩你而来", "连云港市少年宫服务平台"],
+      "articles": [
+        {
+          "title": "连青夜校|花\"young\"六点半,别\"young\"夜生活!连云区\"青年夜校\"来啦!",
+          "date": "2025-2026",
+          "source": "连云新青年",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzAwNzI1NTMzOQ==&mid=2651508617",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "连云区各青年之家活动中心",
+          "courses": ["瑜伽", "书法", "绘画", "舞蹈", "乐器", "手工"],
+          "organizer": "团连云区委",
+          "target_group": "全区青年(每班约20人)",
+          "fee": "公益免费",
+          "participants": "每月一期、每期4-5次课程",
+          "key_feature": "\"花young六点半\"品牌、每月常态化"
+        },
+        {
+          "title": "我市2025年青年夜校圆满收官",
+          "date": "2026-01",
+          "source": "腾讯网(转载)",
+          "url": "https://new.qq.com/rain/a/20260128A03X4J00",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "全市各点位",
+          "courses": ["匹克球", "羽毛球", "非遗手作", "科技课程", "修身课程", "悦己课程"],
+          "organizer": "团连云港市委",
+          "target_group": "全市青年",
+          "fee": "公益为主",
+          "participants": "全年51场、37门课程、2000+人次、42%回流率",
+          "key_feature": "2025年度总结、学员回流率42%"
+        },
+        {
+          "title": "速来扫码报名!青年夜校4月新课表出炉,技能拉满不躺平",
+          "date": "2026-04",
+          "source": "圩你而来(连云港经开区)",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "连云港经开区中云街道范庄社区龙眼山庄党群服务站",
+          "courses": ["编发造型", "社交魔术"],
+          "organizer": "团连云港市委(经开区)",
+          "target_group": "职场青年",
+          "fee": "免费",
+          "participants": "每班30人",
+          "key_feature": "\"社恐克星\"魔术课、零基础社交破冰"
+        },
+        {
+          "title": "青年夜校,你的专属成长充电站(草药香囊+爵士舞)",
+          "date": "2026-02",
+          "source": "连云港青年",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "连云区嘉瑞宝青年之家+DN街舞培训基地",
+          "courses": ["草药香囊制作", "爵士舞"],
+          "organizer": "团连云港市委",
+          "target_group": "全市青年",
+          "fee": "免费",
+          "participants": "限额报名",
+          "key_feature": "非遗香囊+爵士舞双课"
+        },
+        {
+          "title": "新一期青年夜校又来啦!\"马\"上纳福,手作迎新!",
+          "date": "2026-02",
+          "source": "连云港青年",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312037",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "海州区新海街道海连西路新海花园",
+          "courses": ["新春挂件手作"],
+          "organizer": "团连云港市委(海州区)",
+          "target_group": "全市青年",
+          "fee": "免费",
+          "participants": "限额",
+          "key_feature": "新春特别课、纳福手作"
+        },
+        {
+          "title": "手慢无!连青夜校咖啡拉花、泥塑冰箱贴等课程名额开抢!",
+          "date": "2026-07",
+          "source": "美丽连云",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312037",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "连云港老街布集咖啡+港航物流青年之家",
+          "courses": ["咖啡制作", "咖啡拉花", "泥塑亮灯冰箱贴", "趣味桌游"],
+          "organizer": "团连云区委",
+          "target_group": "18-40岁",
+          "fee": "免费",
+          "participants": "15人/12人限额",
+          "key_feature": "盛夏课程、咖啡系列+桌游社交"
+        },
+        {
+          "title": "2026海青夜校春季班招生简章",
+          "date": "2026-03",
+          "source": "连云港市少年宫服务平台",
+          "url": "http://mp.weixin.qq.com/s?__biz=Mzg5NTU1MDQzMA==&mid=2247487980",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "连云港市少年宫(海州区海连中路151号)",
+          "courses": ["文化艺术", "体育健身", "生活技能", "职业技能"],
+          "organizer": "团海州区委+市少年宫主抓+第三方补充",
+          "target_group": "海州区青年",
+          "fee": "公益+低成本",
+          "participants": "\"业\"课堂品牌",
+          "key_feature": "\"团区委统管+少年宫主抓+社会资源补充\"运营模式"
+        }
+      ]
+    },
+    {
+      "city": "徐州",
+      "official_account": "青春徐州",
+      "sub_accounts": ["青春徐州", "青春泉山", "青春邳州", "青春贾汪", "青春云龙", "徐州经开区"],
+      "articles": [
+        {
+          "title": "徐州青年夜校上新!夏日充电计划已启动!(含多项公益免费课程)",
+          "date": "2026-07",
+          "source": "青春徐州",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NDMyMzQyMQ==&mid=2664443844",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "徐州市青少年宫+云龙彭城七里+植物园+鼓楼区医药健康产业园",
+          "courses": ["手势舞", "健康经络调理", "咖啡实践", "非遗手作(绒花/点翠/宋锦/螺钿/缠花/艾草皂)", "AIGC影视实战营"],
+          "organizer": "团徐州市委(\"徐州青年卡\"小程序)",
+          "target_group": "全市青年",
+          "fee": "免费+19.9元/节+380元/6门",
+          "participants": "精品小班",
+          "key_feature": "\"徐州青年卡\"一站式报名、AIGC接单变现"
+        },
+        {
+          "title": "这个五月怎么过?徐州青年夜校等你来!",
+          "date": "2026-05",
+          "source": "青春徐州",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NDMyMzQyMQ==&mid=2664439491",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "贾汪区文化馆+云龙区+泉山区+彭城南路+户部山",
+          "courses": ["非遗植物蓝染", "布艺缝纫", "陈氏太极拳", "AI赋能(作图/短视频/短剧/写作)", "短视频带货运营", "蝴蝶标本", "皮影戏", "香道制牌", "古琴", "拼豆", "水果皂", "石膏娃娃", "贾青yeah校"],
+          "organizer": "团徐州市委+各县区团委",
+          "target_group": "全市青年",
+          "fee": "9.9-39.9元/课+免费",
+          "participants": "五月课程",
+          "key_feature": "\"彭城七里\"青年夜校、非遗皮影戏10元/人"
+        },
+        {
+          "title": "拼豆、制香、茶艺......9.9元起!彭城七里青年夜校新开",
+          "date": "2026-01",
+          "source": "青春徐州",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312038",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "彭城七里示范段",
+          "courses": ["拼豆", "茶膳", "古琴", "手工皂", "蝴蝶标本", "皮影戏", "制香"],
+          "organizer": "团徐州市委",
+          "target_group": "全市青年",
+          "fee": "9.9元起",
+          "participants": "首期3类8门课程",
+          "key_feature": "\"青春小店*青年夜校\"、非遗大师授课"
+        },
+        {
+          "title": "徐州经开区青年夜校首期开课!以律动抚平疲惫,以舞姿拥抱夏夜",
+          "date": "2026-08",
+          "source": "青春徐州",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312038",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "凤凰湾创芯人才港",
+          "courses": ["中国舞", "街舞poping", "舞蹈疗愈"],
+          "organizer": "徐州经开区团委+徐州幼儿师范高等专科学校",
+          "target_group": "人才港青年人才",
+          "fee": "8月免费体验4节课",
+          "participants": "首期三门课程",
+          "key_feature": "\"家门口的人才夜校\"、院校专业教师授课"
+        },
+        {
+          "title": "泉山区青年夜校\"心动课程\"来袭,太极/花艺/茶道/烘焙一次解锁!",
+          "date": "2026-03",
+          "source": "青春泉山",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312029",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "泉山区陈庄社区党群服务中心+珠山数字经济产业园",
+          "courses": ["太极拳", "花艺", "茶道", "烘焙"],
+          "organizer": "团泉山区委+区人社局",
+          "target_group": "泉山区青年",
+          "fee": "公益免费",
+          "participants": "每门10-20人限额",
+          "key_feature": "庞庄街道+金山街道双点位"
+        },
+        {
+          "title": "2026年7月\"青年夜校\"开始报名啦(邳州)",
+          "date": "2026-07",
+          "source": "青春邳州",
+          "url": "http://mp.weixin.qq.com/s?__biz=MzI3OTAxNDMwOQ==&mid=2650265838",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "圣仕健身(邳州鑫惠体育馆)+莓烦恼手作",
+          "courses": ["球操", "拼豆手工"],
+          "organizer": "团邳州市委",
+          "target_group": "18-45周岁",
+          "fee": "免费+19.9元",
+          "participants": "每班10人",
+          "key_feature": "\"徐州青年卡\"小程序报名"
+        },
+        {
+          "title": "青年夜校|团团陪你一起,邂逅初夏时光(五月盘点)",
+          "date": "2026-05",
+          "source": "青春徐州",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312038",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "全市各点位",
+          "courses": ["健康养生", "急救", "非遗植物蓝染", "AI赋能", "八段锦", "乒乓球", "短视频带货", "达美乐披萨DIY", "国画", "板绘", "健身"],
+          "organizer": "团徐州市委",
+          "target_group": "全市青年",
+          "fee": "免费+低价",
+          "participants": "五月全市盘点",
+          "key_feature": "\"徐州青年卡\"全线上报名、五月课程圆满收官"
+        }
+      ]
+    },
+    {
+      "city": "泰州",
+      "official_account": "青春泰州",
+      "sub_accounts": ["青春泰州", "泰州市青少年活动中心", "乐活泰州", "南中医凤城青年"],
+      "articles": [
+        {
+          "title": "青年夜校第二季|与其仰望,不如摘一颗属于自己的星辰~",
+          "date": "2025-2026",
+          "source": "青春泰州",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312028",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "泰州市青少年活动中心+三水湾+万象城+泰广办学点等",
+          "courses": ["八段锦", "乒乓球", "早茶制作(烧卖/蒸饺)", "学茶鉴茶", "书法", "AI智能应用", "镜前造型美妆", "手机摄影", "匹克球", "缝纫手作", "爵士舞", "网球", "形体展示"],
+          "organizer": "团泰州市委",
+          "target_group": "全市青年",
+          "fee": "部分免费+部分收费(70%开班线)",
+          "participants": "第二季+第三季连续运营",
+          "key_feature": "官方双平台(青春泰州+泰州市青少年活动中心)、小红书+微信号全矩阵"
+        },
+        {
+          "title": "青年夜校第三季|开抢!来夜校遇见崭新的\"自我\"~",
+          "date": "2026-07",
+          "source": "青春泰州",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312038",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "泰广办学点+体育公园+万象城办学点",
+          "courses": ["手机摄影(6课)", "匹克球(6课)", "缝纫手作(6课)"],
+          "organizer": "团泰州市委",
+          "target_group": "零基础青年",
+          "fee": "材料包统一提供",
+          "participants": "限额先到先得",
+          "key_feature": "第三季开抢、6课系统班"
+        },
+        {
+          "title": "城市入夜,青春不打烊,青年夜校邀你下周开始上课啦!",
+          "date": "2026-07",
+          "source": "乐活泰州",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312038",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "金鹰商业街海友酒店三楼+泰州市体育馆+第六空间大都会家居",
+          "courses": ["爵士舞", "网球", "形体展示"],
+          "organizer": "团泰州市委",
+          "target_group": "全市青年",
+          "fee": "收费课程",
+          "participants": "7.6-8.14开课",
+          "key_feature": "薛彤老师(中国舞协)+赵芳老师(网球国家一级运动员)"
+        },
+        {
+          "title": "青年夜校探班记|青春无边界,解锁你的新\"夜\"态!",
+          "date": "2026",
+          "source": "泰州市青少年活动中心",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312038",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "中心办学点+三水湾办学点+财政局办学点",
+          "courses": ["八段锦", "乒乓球", "早茶制作", "学茶鉴茶", "书法", "AI智能应用", "镜前美妆"],
+          "organizer": "团泰州市委",
+          "target_group": "全市青年",
+          "fee": "公益+收费混合",
+          "participants": "持续运营",
+          "key_feature": "\"探班记\"系列报道、多办学点联动"
+        },
+        {
+          "title": "泰州青年夜校合伙人招募中!",
+          "date": "2026",
+          "source": "青春泰州",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5OTIyMjQ4Mg==&mid=2649906383",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "全市各办学点",
+          "courses": ["招募中(文化艺术/体育健身/生活技能/职场发展/潮流新知)"],
+          "organizer": "团泰州市委",
+          "target_group": "有特长者/机构",
+          "fee": "合伙人制",
+          "participants": "招募中",
+          "key_feature": "\"课程合伙人\"招募、社会化运营"
+        },
+        {
+          "title": "拼手速!南中医泰州校区2026青年夜校报名通道,今日开启!",
+          "date": "2026-04",
+          "source": "南中医凤城青年",
+          "url": "http://mp.weixin.qq.com/s?__biz=Mzk5MDkyMzYyNg==&mid=2247657984",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "南中医泰州校区\"一站式\"学生社区青年之家",
+          "courses": ["短视频制作", "新媒体运营", "摄影", "美妆", "非遗手工", "羽毛球"],
+          "organizer": "南中医泰州校区团工委",
+          "target_group": "在校大学生",
+          "fee": "全部免费",
+          "participants": "450份问卷调研后精准匹配",
+          "key_feature": "\"传承·创新·成长\"核心理念、行业大咖授课"
+        }
+      ]
+    },
+    {
+      "city": "宿迁",
+      "official_account": "青春宿迁",
+      "sub_accounts": ["青春宿迁", "青春宿豫", "泗阳共青团", "幸福相豫人才社区"],
+      "articles": [
+        {
+          "title": "夏日焕新出发!宿迁青年夜校22门暑期课程正式招生啦!",
+          "date": "2026-07",
+          "source": "青春宿迁",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NTMyMjMyMQ==&mid=2652299985",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "宿迁市青少年宫+各县区",
+          "courses": ["篆刻", "桃雕", "书法", "色彩绘画", "拼豆", "声乐", "瑜伽", "爵士舞", "网红热舞", "非洲鼓", "架子鼓", "心肺复苏", "中医问诊", "痤疮调理", "科学减重", "美妆造型", "鸡尾酒制作", "AI短剧创作", "反诈科普"],
+          "organizer": "团宿迁市委(\"宿有为\"青年学子平台)",
+          "target_group": "返乡大学生+职场青年",
+          "fee": "公益免费+低价(128元/4节起)",
+          "participants": "22门课程",
+          "key_feature": "\"宿有为\"平台、江苏青年AI卡双通道报名"
+        },
+        {
+          "title": "暑期充电不停歇!青年夜校第二波暑期课程火热来袭!",
+          "date": "2026-08",
+          "source": "青春宿迁",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312037",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "宿迁市各点位",
+          "courses": ["非遗果壳铃手作", "鸡尾酒调制", "健身瑜伽"],
+          "organizer": "团宿迁市委",
+          "target_group": "全市青年",
+          "fee": "公益为主",
+          "participants": "第二波暑期课程",
+          "key_feature": "暑期进阶班、非遗果壳铃+鸡尾酒微醺夏夜"
+        },
+        {
+          "title": "泗阳试点,宿迁首家青年夜校开课!",
+          "date": "2025-05",
+          "source": "宿迁发布(转载)",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5NTE3NDQyMw==&mid=2651312500",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "泗阳青年夜校(中国舞教室+品酒课堂+插花教室)",
+          "courses": ["中国舞", "品酒(泗阳白酒文化)", "烘焙", "插花"],
+          "organizer": "团泗阳县委(全市试点)",
+          "target_group": "泗阳青年",
+          "fee": "免费",
+          "participants": "首期开班",
+          "key_feature": "\"青年点单+团团开课\"模式、全市首家试点"
+        },
+        {
+          "title": "宿迁:青年中医夜校学中医,解锁健康生活新方式",
+          "date": "2026-07",
+          "source": "健康宿迁(泗阳县中医院)",
+          "url": "http://mp.weixin.qq.com/s?__biz=MjM5OTQyODA0OQ==&mid=2659984970",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "泗阳县中医院",
+          "courses": ["中医理论", "中医养生实操", "望闻问切"],
+          "organizer": "泗阳团县委+泗阳县中医院",
+          "target_group": "泗阳青年中医爱好者",
+          "fee": "免费",
+          "participants": "100+人首堂课、累计300+人(两届)",
+          "key_feature": "\"百市千县\"中医药文化惠民活动、每周三晚持续两月"
+        },
+        {
+          "title": "夏夜逐光|相豫·青年夜校第二期开课!",
+          "date": "2026-08",
+          "source": "幸福相豫人才社区",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312037",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "相豫·漫柏未来人才社区三楼(宿豫区)",
+          "courses": ["舒缓瑜伽", "趣味电子钢琴", "国风二胡声乐"],
+          "organizer": "团宿豫区委+宿迁电子商务产业园区+人才社区党支部",
+          "target_group": "人才社区青年",
+          "fee": "免费",
+          "participants": "第二期",
+          "key_feature": "\"社区三楼\"家门口夜校、邻里同频"
+        },
+        {
+          "title": "宿豫区\"相豫·青年夜校第四期\"持续开讲!",
+          "date": "2026",
+          "source": "青春宿豫",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312037",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "创新大厦(宿豫区洪泽湖东路与湘江路交汇处)",
+          "courses": ["AI+新媒体运营与粉丝增长", "羽毛球"],
+          "organizer": "团宿豫区委",
+          "target_group": "宿豫籍大学生+青年人才+新兴领域青年",
+          "fee": "公益非盈利",
+          "participants": "第四期",
+          "key_feature": "\"相豫·青年夜校\"品牌、AI内容变现路径"
+        },
+        {
+          "title": "指尖雕桃核,方寸藏乡情|泗阳县青年夜校非遗桃雕体验",
+          "date": "2026-08",
+          "source": "泗阳共青团",
+          "url": "http://mp.weixin.qq.com/s?src=11&timestamp=1787312037",
+          "content_type": "图文",
+          "has_video": false,
+          "video_count": 0,
+          "venue": "泗阳县青年夜校",
+          "courses": ["云渡桃雕(非遗)"],
+          "organizer": "泗阳团县委",
+          "target_group": "泗阳青年学子",
+          "fee": "免费",
+          "participants": "8月10日体验活动",
+          "key_feature": "云守阳大师(江苏省非遗代表性传承人/工艺美术大师)授课"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_cities": 13,
+    "total_articles": 52,
+    "articles_with_video": 1,
+    "articles_without_video": 51,
+    "date_range": "2024-01-01 to 2026-08-21",
+    "common_courses": ["八段锦", "瑜伽", "羽毛球", "咖啡", "美妆", "书法", "非遗手作", "AI技能", "短视频剪辑", "急救培训", "茶艺", "舞蹈", "烘焙", "吉他", "乒乓球"],
+    "operation_models": {
+      "公益免费": "绝大多数课程免费",
+      "low_cost": "部分材料费/成本费(19.9-399元)",
+      "government_led": "团委牵头+人社/教育/工会协同",
+      "social_partners": "引入社会机构/非遗传承人/高校教师"
+    }
+  }
+};
+
 let currentPage = 1;
 let filteredRows = [];
+const PAGE_SIZE = 10;
 
-async function loadData() {
-  const res = await fetch('data/youth_school_data.json');
-  DATA = await res.json();
-  init();
-}
+/* ========== 初始化 ========== */
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    renderStats();
+    renderCityCards();
+    renderCharts();
+    renderDafengTimeline();
+    initFilters();
+    renderTable();
+    renderCourseTable();
+  } catch(err) {
+    console.error(err);
+    var banner = document.getElementById('errorBanner');
+    banner.style.display = 'block';
+    banner.textContent = '⚠️ 渲染出错：' + err.message;
+  }
+});
 
-function init() {
-  renderStats();
-  renderCityCards();
-  renderCharts();
-  renderDafengTimeline();
-  initFilters();
-  renderTable();
-  renderCourseTable();
-}
-
+/* ========== 统计卡片 ========== */
 function renderStats() {
   const sb = document.getElementById('statsBar');
   const cities = DATA.cities.length;
-  const articles = DATA.cities.reduce((s,c)=>s+c.articles.length,0);
-  const withVideo = DATA.cities.reduce((s,c)=>s+c.articles.filter(a=>a.has_video).length,0);
+  let articles = 0, withVideo = 0;
   const allCourses = new Set();
-  DATA.cities.forEach(c=>c.articles.forEach(a=>a.courses.forEach(co=>allCourses.add(co))));
-  sb.innerHTML = `
-    <div class="stat-card"><div class="num">${cities}</div><div class="label">覆盖城市</div></div>
-    <div class="stat-card"><div class="num">${articles}</div><div class="label">推文总数</div></div>
-    <div class="stat-card"><div class="num">${withVideo}</div><div class="label">含视频推文</div></div>
-    <div class="stat-card"><div class="num">${allCourses.size}</div><div class="label">去重课程数</div></div>
-    <div class="stat-card"><div class="num">13</div><div class="label">官方公众号</div></div>
-    <div class="stat-card"><div class="num">2024-2026</div><div class="label">检索时间范围</div></div>
-  `;
+  DATA.cities.forEach(c => {
+    articles += c.articles.length;
+    withVideo += c.articles.filter(a => a.has_video).length;
+    c.articles.forEach(a => a.courses.forEach(co => allCourses.add(co)));
+  });
+  sb.innerHTML =
+    '<div class="stat-card"><div class="num">'+cities+'</div><div class="label">覆盖城市</div></div>'+
+    '<div class="stat-card"><div class="num">'+articles+'</div><div class="label">推文总数</div></div>'+
+    '<div class="stat-card"><div class="num">'+withVideo+'</div><div class="label">含视频推文</div></div>'+
+    '<div class="stat-card"><div class="num">'+allCourses.size+'</div><div class="label">去重课程数</div></div>'+
+    '<div class="stat-card"><div class="num">13</div><div class="label">官方公众号</div></div>'+
+    '<div class="stat-card"><div class="num">2024-2026</div><div class="label">检索时间范围</div></div>';
+  // 更新 footer 数字
+  var footer = document.querySelector('.footer');
+  footer.textContent = '数据来源：各市团委官方微信公众号公开推文 ｜ 检索时间：2026年8月 ｜ 共收录 '+articles+' 篇推文 ｜ 仅供研究参考';
 }
 
+/* ========== 城市卡片 ========== */
 function renderCityCards() {
   const wrap = document.getElementById('cityCards');
-  wrap.innerHTML = DATA.cities.map(c=>{
+  wrap.innerHTML = DATA.cities.map(c => {
     const artCount = c.articles.length;
-    const vidCount = c.articles.filter(a=>a.has_video).length;
+    const vidCount = c.articles.filter(a => a.has_video).length;
     const courses = new Set();
-    c.articles.forEach(a=>a.courses.forEach(co=>courses.add(co)));
-    return `<div class="city-card">
-      <h4>${c.city} <span class="badge">${artCount}篇</span></h4>
-      <div style="font-size:12px;color:#666;">📌 ${c.official_account}</div>
-      <ul>
-        <li>📄 推文：${artCount} 篇（含视频 ${vidCount} 篇）</li>
-        <li>📚 课程：${courses.size} 种</li>
-        <li>🏛️ 子账号：${c.sub_accounts.join('、')}</li>
-      </ul>
-    </div>`;
+    c.articles.forEach(a => a.courses.forEach(co => courses.add(co)));
+    return '<div class="city-card">'+
+      '<h4>'+c.city+' <span class="badge">'+artCount+'篇</span></h4>'+
+      '<div style="font-size:12px;color:#666;">📌 '+c.official_account+'</div>'+
+      '<ul>'+
+        '<li>📄 推文：'+artCount+' 篇（含视频 '+vidCount+' 篇）</li>'+
+        '<li>📚 课程：'+courses.size+' 种</li>'+
+        '<li>🏛️ 子账号：'+(c.sub_accounts||[]).join('、')+'</li>'+
+      '</ul></div>';
   }).join('');
 }
 
+/* ========== 图表 ========== */
 function renderCharts() {
-  const cities = DATA.cities.map(c=>c.city);
-  const artCounts = DATA.cities.map(c=>c.articles.length);
-  const courseCounts = DATA.cities.map(c=>{
-    const s=new Set(); c.articles.forEach(a=>a.courses.forEach(co=>s.add(co))); return s.size;
+  const cities = DATA.cities.map(c => c.city);
+  const artCounts = DATA.cities.map(c => c.articles.length);
+  const courseCounts = DATA.cities.map(c => {
+    const s = new Set(); c.articles.forEach(a => a.courses.forEach(co => s.add(co))); return s.size;
   });
-  const vidCounts = DATA.cities.map(c=>c.articles.filter(a=>a.has_video).length);
+  const vidCounts = DATA.cities.map(c => c.articles.filter(a => a.has_video).length);
 
-  new Chart(document.getElementById('chartArticles'),{
-    type:'bar',
-    data:{ labels:cities, datasets:[{ label:'推文数', data:artCounts, backgroundColor:'#1976d2' }] },
-    options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true} } }
+  new Chart(document.getElementById('chartArticles'), {
+    type: 'bar',
+    data: { labels: cities, datasets: [{ label:'推文数', data: artCounts, backgroundColor:'#1976d2' }] },
+    options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true} } }
   });
-  new Chart(document.getElementById('chartCourses'),{
-    type:'bar',
-    data:{ labels:cities, datasets:[{ label:'课程数', data:courseCounts, backgroundColor:'#43a047' }] },
-    options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true} } }
+  new Chart(document.getElementById('chartCourses'), {
+    type: 'bar',
+    data: { labels: cities, datasets: [{ label:'课程数', data: courseCounts, backgroundColor:'#43a047' }] },
+    options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true} } }
   });
-  new Chart(document.getElementById('chartVideo'),{
-    type:'doughnut',
-    data:{ labels:cities, datasets:[{ data:vidCounts, backgroundColor:cities.map((_,i)=>`hsl(${i*28},65%,55%)`) }] },
-    options:{ responsive:true, plugins:{ legend:{position:'right',font:{size:11}} } }
+  new Chart(document.getElementById('chartVideo'), {
+    type: 'doughnut',
+    data: { labels: cities, datasets: [{ data: vidCounts, backgroundColor: cities.map((_,i)=>'hsl('+(i*28)+',65%,55%)') }] },
+    options: { responsive:true, plugins:{ legend:{position:'right', labels:{font:{size:11}}} } }
   });
 
   // Top courses
   const courseFreq = {};
-  DATA.cities.forEach(c=>c.articles.forEach(a=>a.courses.forEach(co=>{
-    courseFreq[co]=(courseFreq[co]||0)+1;
-  })));
-  const top = Object.entries(courseFreq).sort((a,b)=>b[1]-a[1]).slice(0,15);
-  new Chart(document.getElementById('chartTopCourses'),{
-    type:'horizontalBar',
-    data:{ labels:top.map(t=>t[0]), datasets:[{ label:'出现次数', data:top.map(t=>t[1]), backgroundColor:'#e65100' }] },
-    options:{ responsive:true, indexAxis:'y', plugins:{ legend:{display:false} }, scales:{ x:{beginAtZero:true} } }
+  DATA.cities.forEach(c => c.articles.forEach(a => a.courses.forEach(co => { courseFreq[co] = (courseFreq[co]||0)+1; })));
+  const top = Object.entries(courseFreq).sort((a,b) => b[1]-a[1]).slice(0,15);
+  new Chart(document.getElementById('chartTopCourses'), {
+    type: 'bar',
+    data: { labels: top.map(t=>t[0]), datasets: [{ label:'出现次数', data: top.map(t=>t[1]), backgroundColor:'#e65100' }] },
+    options: { indexAxis:'y', responsive:true, plugins:{ legend:{display:false} }, scales:{ x:{beginAtZero:true} } }
   });
 }
 
+/* ========== 大丰时间线 ========== */
 function renderDafengTimeline() {
   const tl = document.getElementById('dafengTimeline');
-  const dafeng = DATA.cities.find(c=>c.city==='盐城').articles.filter(a=>a.venue.includes('大丰')||a.source.includes('大丰')||a.title.includes('大丰')||a.organizer.includes('大丰'));
-  // Include all 盐城 articles for broader context
-  const all = DATA.cities.find(c=>c.city==='盐城').articles;
-  tl.innerHTML = all.map(a=>`
-    <div class="timeline-item">
-      <div class="date">${a.date}</div>
-      <div class="title">${a.title}</div>
-      <div style="font-size:12px;color:#555;">📍 ${a.venue} | 💰 ${a.fee} | 👥 ${a.participants}</div>
-      <div style="font-size:12px;color:#1976d2;">✨ ${a.key_feature}</div>
-    </div>
-  `).join('');
+  const yancheng = DATA.cities.find(c => c.city === '盐城');
+  if (!yancheng) { tl.innerHTML = '<div style="color:#999;">暂无盐城数据</div>'; return; }
+  // 展示盐城全部推文（含大丰相关）
+  const list = yancheng.articles.slice().sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  tl.innerHTML = list.map(a => {
+    const isDafeng = (a.venue||'').includes('大丰') || (a.source||'').includes('大丰') || (a.title||'').includes('大丰') || (a.organizer||'').includes('大丰');
+    return '<div class="timeline-item">'+
+      '<div class="date">'+(a.date||'')+(isDafeng?' 🌟':'')+'</div>'+
+      '<div class="title">'+(a.title||'')+'</div>'+
+      '<div style="font-size:12px;color:#555;">📍 '+(a.venue||'-')+' | 💰 '+(a.fee||'-')+' | 👥 '+(a.participants||'-')+'</div>'+
+      '<div style="font-size:12px;color:#1976d2;">✨ '+(a.key_feature||'')+'</div>'+
+    '</div>';
+  }).join('');
 }
 
+/* ========== 筛选器 ========== */
 function initFilters() {
   const sel = document.getElementById('filterCity');
-  DATA.cities.forEach(c=>{
-    const opt=document.createElement('option'); opt.value=c.city; opt.textContent=c.city; sel.appendChild(opt);
+  DATA.cities.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.city; opt.textContent = c.city; sel.appendChild(opt);
   });
 }
 
@@ -330,92 +1543,108 @@ function applyFilter() {
   const vid = document.getElementById('filterVideo').value;
   const kw = document.getElementById('filterKeyword').value.trim().toLowerCase();
   let rows = [];
-  DATA.cities.forEach(c=>{
-    c.articles.forEach(a=>{
-      rows.push({city:c.city, account:c.official_account, ...a});
-    });
+  DATA.cities.forEach(c => {
+    c.articles.forEach(a => { rows.push({city:c.city, account:c.official_account, ...a}); });
   });
-  if(city) rows = rows.filter(r=>r.city===city);
-  if(vid==='yes') rows = rows.filter(r=>r.has_video);
-  if(vid==='no') rows = rows.filter(r=>!r.has_video);
-  if(kw) rows = rows.filter(r=>JSON.stringify(r).toLowerCase().includes(kw));
+  if (city) rows = rows.filter(r => r.city === city);
+  if (vid === 'yes') rows = rows.filter(r => r.has_video);
+  if (vid === 'no') rows = rows.filter(r => !r.has_video);
+  if (kw) rows = rows.filter(r => JSON.stringify(r).toLowerCase().includes(kw));
   filteredRows = rows;
   currentPage = 1;
   renderTable();
 }
 
 function resetFilter() {
-  document.getElementById('filterCity').value='';
-  document.getElementById('filterVideo').value='';
-  document.getElementById('filterKeyword').value='';
+  document.getElementById('filterCity').value = '';
+  document.getElementById('filterVideo').value = '';
+  document.getElementById('filterKeyword').value = '';
   filteredRows = [];
   currentPage = 1;
   renderTable();
 }
 
+/* ========== 数据表格 ========== */
 function renderTable() {
   const tbody = document.getElementById('tableBody');
   const pag = document.getElementById('pagination');
-  const allRows = filteredRows.length? filteredRows : [];
-  if(!allRows.length){
-    DATA.cities.forEach(c=>c.articles.forEach(a=>allRows.push({city:c.city,account:c.official_account,...a})));
+  let allRows = filteredRows.slice();
+  if (!allRows.length) {
+    DATA.cities.forEach(c => c.articles.forEach(a => allRows.push({city:c.city, account:c.official_account, ...a})));
   }
-  document.getElementById('filterCount').textContent = `共 ${allRows.length} 条`;
-  const totalPages = Math.ceil(allRows.length/PAGE_SIZE);
-  const start = (currentPage-1)*PAGE_SIZE;
-  const pageRows = allRows.slice(start, start+PAGE_SIZE);
-  tbody.innerHTML = pageRows.map((r,i)=>`
-    <tr>
-      <td>${start+i+1}</td>
-      <td><b>${r.city}</b></td>
-      <td style="font-size:11.5px;">${r.account}</td>
-      <td style="max-width:280px;">${r.title}</td>
-      <td style="white-space:nowrap;">${r.date}</td>
-      <td style="max-width:260px;font-size:11.5px;">${r.courses.join('、')}</td>
-      <td style="max-width:180px;font-size:11.5px;">${r.venue}</td>
-      <td>${r.fee.includes('免费')?'<span class="tag tag-free">免费</span>':`<span class="tag tag-low">${r.fee}</span>`}</td>
-      <td style="font-size:11.5px;">${r.target_group}</td>
-      <td>${r.has_video?'<span class="tag tag-yes">✅ 有视频</span>':'<span class="tag tag-no">❌ 无</span>'}</td>
-      <td style="max-width:220px;font-size:11.5px;">${r.key_feature}</td>
-      <td style="font-size:11px;white-space:nowrap;"><a href="${r.url}" target="_blank" rel="noopener">原文↗</a></td>
-    </tr>
-  `).join('');
+  document.getElementById('filterCount').textContent = '共 '+allRows.length+' 条';
+  const totalPages = Math.max(1, Math.ceil(allRows.length / PAGE_SIZE));
+  const start = (currentPage-1) * PAGE_SIZE;
+  const pageRows = allRows.slice(start, start + PAGE_SIZE);
+  tbody.innerHTML = pageRows.map((r,i) => {
+    const feeTag = (r.fee||'').includes('免费')
+      ? '<span class="tag tag-free">免费</span>'
+      : '<span class="tag tag-low">'+(r.fee||'-')+'</span>';
+    const vidTag = r.has_video
+      ? '<span class="tag tag-yes">✅ 有视频</span>'
+      : '<span class="tag tag-no">❌ 无</span>';
+    return '<tr>'+
+      '<td>'+(start+i+1)+'</td>'+
+      '<td><b>'+(r.city||'')+'</b></td>'+
+      '<td style="font-size:11.5px;">'+(r.account||'')+'</td>'+
+      '<td style="max-width:280px;">'+(r.title||'')+'</td>'+
+      '<td style="white-space:nowrap;">'+(r.date||'')+'</td>'+
+      '<td style="max-width:260px;font-size:11.5px;">'+(r.courses||[]).join('、')+'</td>'+
+      '<td style="max-width:180px;font-size:11.5px;">'+(r.venue||'')+'</td>'+
+      '<td>'+feeTag+'</td>'+
+      '<td style="font-size:11.5px;">'+(r.target_group||'')+'</td>'+
+      '<td>'+vidTag+'</td>'+
+      '<td style="max-width:220px;font-size:11.5px;">'+(r.key_feature||'')+'</td>'+
+      '<td style="font-size:11px;white-space:nowrap;"><a href="'+(r.url||'#')+'" target="_blank" rel="noopener">原文↗</a></td>'+
+    '</tr>';
+  }).join('');
   let pager = '';
-  for(let i=1;i<=totalPages;i++) pager+=`<button class="${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  for (let i=1; i<=totalPages; i++) pager += '<button class="'+(i===currentPage?'active':'')+'" onclick="goPage('+i+')">'+i+'</button>';
   pag.innerHTML = pager;
 }
 
-function goPage(p) { currentPage=p; renderTable(); window.scrollTo({top:document.getElementById('dataTable').offsetTop-60,behavior:'smooth'}); }
-
-function renderCourseTable() {
-  const tbody = document.getElementById('courseTableBody');
-  const cats = {运动:['羽毛球','瑜伽','八段锦','搏击','太极','拳击','乒乓球','普拉提','舞蹈','游泳','足球','动感单车','燃脂','有氧','轮滑','滑板','射箭','匹克球','爵士','芭蕾','拉丁','街舞','形体'],
-              文化:['书法','国画','素描','水彩','摄影','声乐','古琴','吉他','钢琴','笛子','扬琴','葫芦丝','非洲鼓','萨克斯','手碟','长笛','小提琴','二胡','古筝'],
-              AI技能:['AI','短视频','新媒体','直播','互联网','电脑','编程','3D','剪辑','文案','办公','AIGC','DeepSeek','人工智能','无人机','OpenClaw'],
-              非遗:['非遗','剪纸','泥人','锡绣','螺钿','陶艺','面塑','瓷刻','桃雕','皮影','绳结','香囊','缠花','宋锦','扎染','绒花','点翠','竹编','蜡片','马赛克'],
-              养生:['养生','中医','八段锦','经络','瑜伽','茶道','茶艺','艾灸','香薰','针灸','痤疮','减重','急救','CPR'],
-              职场:['面试','沟通','礼仪','职场','创业','商务','收纳','形象','美妆','穿搭','IP打造','文案','反诈']};
-  tbody.innerHTML = DATA.cities.map(c=>{
-    const allC = []; c.articles.forEach(a=>a.courses.forEach(co=>allC.push(co)));
-    function pick(list){ return [...new Set(allC.filter(x=>list.some(k=>x.includes(k)||k.includes(x))))]; }
-    const m = pick(cats.运动); const w = pick(cats.文化); const s = pick(cats.AI技能);
-    const f = pick(cats.非遗); const h = pick(cats.养生); const j = pick(cats.职场);
-    return `<tr>
-      <td><b>${c.city}</b></td>
-      <td>${m.join('、')||'-'}</td>
-      <td>${w.join('、')||'-'}</td>
-      <td>${s.join('、')||'-'}</td>
-      <td>${f.join('、')||'-'}</td>
-      <td>${h.join('、')||'-'}</td>
-      <td>${j.join('、')||'-'}</td>
-    </tr>`;
-  }).join('');
+function goPage(p) {
+  currentPage = p;
+  renderTable();
+  window.scrollTo({top: document.getElementById('dataTable').offsetTop - 60, behavior:'smooth'});
 }
 
-loadData().catch(err=>{
-  console.error('Failed to load data:',err);
-  document.body.insertAdjacentHTML('afterbegin','<div style="background:#fdd;padding:10px;text-align:center;">⚠️ 数据文件加载失败，请确保通过 HTTP 服务器访问（如 python -m http.server）</div>');
-});
+/* ========== 课程对比表 ========== */
+function renderCourseTable() {
+  const tbody = document.getElementById('courseTableBody');
+  const cats = {
+    运动: ['羽毛球','瑜伽','八段锦','搏击','太极','拳击','乒乓球','普拉提','舞蹈','游泳','足球','动感单车','燃脂','有氧','轮滑','滑板','射箭','匹克球','爵士','芭蕾','拉丁','街舞','形体','芭蕾形体','爵士舞','古典舞','拉丁舞','街舞','太极','搏击操','Barre','芭杆'],
+    AI技能: ['AI','短视频','新媒体','直播','互联网','电脑','编程','3D','剪辑','文案','办公','AIGC','DeepSeek','人工智能','无人机','OpenClaw','视频剪辑','短视频制作','视频神剪','即梦','数据分析','代码','python','Python','自动化'],
+    非遗: ['非遗','剪纸','泥人','锡绣','螺钿','陶艺','面塑','瓷刻','桃雕','皮影','绳结','香囊','缠花','宋锦','扎染','绒花','点翠','竹编','蜡片','马赛克','掐丝','珐琅','陶印','非遗手作','非遗绳结','惠山泥人'],
+    养生: ['养生','中医','经络','茶道','茶艺','艾灸','香薰','针灸','痤疮','减重','急救','CPR','气血','身心疗愈','即兴戏剧'],
+    职场: ['面试','沟通','礼仪','职场','创业','商务','收纳','形象','美妆','穿搭','IP打造','反诈','简历','社交','交友','婚恋','主持','朗诵','名著']
+  };
+  // 文化艺术：不在以上类别的都算文化
+  const allCatsKeywords = new Set();
+  Object.values(cats).forEach(arr => arr.forEach(k => allCatsKeywords.add(k.toLowerCase())));
+
+  tbody.innerHTML = DATA.cities.map(c => {
+    const allC = []; c.articles.forEach(a => a.courses.forEach(co => allC.push(co)));
+    function pick(list) { return [...new Set(allC.filter(x => list.some(k => (x||'').includes(k) || (k||'').includes(x))))]; }
+    const m = pick(cats.运动);
+    const s = pick(cats.AI技能);
+    const f = pick(cats.非遗);
+    const h = pick(cats.养生);
+    const j = pick(cats.职场);
+    // 文化艺术 = 全部 - 已分类
+    const classified = new Set([...m,...s,...f,...h,...j].map(x=>x.toLowerCase()));
+    const w = [...new Set(allC.filter(x => !classified.has((x||'').toLowerCase())))];
+    return '<tr>'+
+      '<td><b>'+c.city+'</b></td>'+
+      '<td>'+(m.join('、')||'-')+'</td>'+
+      '<td>'+(w.join('、')||'-')+'</td>'+
+      '<td>'+(s.join('、')||'-')+'</td>'+
+      '<td>'+(f.join('、')||'-')+'</td>'+
+      '<td>'+(h.join('、')||'-')+'</td>'+
+      '<td>'+(j.join('、')||'-')+'</td>'+
+    '</tr>';
+  }).join('');
+}
 </script>
 </body>
 </html>
